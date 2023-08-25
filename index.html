@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<!-- Created with https://packager.turbowarp.org/ -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- We only include this to explicitly loosen the CSP of various packager environments. It does not provide any security. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:">
+  <title>turbocraft</title>
+  <style>
+    body {
+      color: #ffffff;
+      font-family: sans-serif;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    :root, body.is-fullscreen {
+      background-color: #000000;
+    }
+    [hidden] {
+      display: none !important;
+    }
+    h1 {
+      font-weight: normal;
+    }
+    a {
+      color: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    #app, #loading, #error, #launch {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: default;
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: #000000;
+    }
+    #launch {
+      background-color: rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+    }
+    .green-flag {
+      width: 80px;
+      height: 80px;
+      padding: 16px;
+      border-radius: 100%;
+      background: rgba(255, 255, 255, 0.75);
+      border: 3px solid hsla(0, 100%, 100%, 1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+    }
+    #loading {
+      
+    }
+    .progress-bar-outer {
+      border: 1px solid currentColor;
+      height: 10px;
+      width: 200px;
+      max-width: 200px;
+    }
+    .progress-bar-inner {
+      height: 100%;
+      width: 0;
+      background-color: currentColor;
+    }
+    .loading-text, noscript {
+      font-weight: normal;
+      font-size: 36px;
+      margin: 0 0 16px;
+    }
+    .loading-image {
+      margin: 0 0 16px;
+    }
+    #error-message, #error-stack {
+      font-family: monospace;
+      max-width: 600px;
+      white-space: pre-wrap;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    #error-stack {
+      text-align: left;
+      max-height: 200px;
+      overflow: auto;
+    }
+    .control-button {
+      width: 2rem;
+      height: 2rem;
+      padding: 0.375rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: pointer;
+      border: 0;
+      border-radius: 4px;
+    }
+    .control-button:hover {
+      background: #ff4c4c26;
+    }
+    .control-button.active {
+      background: #ff4c4c59;
+    }
+    .fullscreen-button {
+      background: white !important;
+    }
+    .standalone-fullscreen-button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 0 0 0 4px;
+      padding: 4px;
+      cursor: pointer;
+    }
+    .sc-canvas {
+      cursor: auto;
+    }
+    .sc-monitor-root[data-opcode^="data_"] .sc-monitor-value-color {
+      background-color: #ff8c1a;
+    }
+    .sc-monitor-row-value-outer {
+      background-color: #fc662c;
+    }
+    .sc-monitor-row-value-editing .sc-monitor-row-value-outer {
+      background-color: #e25b27;
+    }
+    
+  </style>
+  <meta name="theme-color" content="#000000">
+  <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK8AAACtCAIAAABJOLgpAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAC6kSURBVHhe7Z37juxMltWrKut0D0ICIaa7ATHi1vw18AIj8QcwYkYCIS7T8y7zRvCI/X11mfVba++wMyurKjNtZ55zvrMqMrwdjth3R9jOS93/9f//j3dv8Pr6WtQhDtrva7uP+/vj7d8Bvm/PPNTWkKlB7U8NL68vKb19oW1GgeGR7ArZ/Q5Q9nzvnpmyYU/FqBxgmKrC68tzSu37qC0vaGwxOeD5zWLPCttY+O48w0ox18x0V4b3Qvh4+tVUeM8f0182IPueFKdZcU5/Q8DqhumuDO+F8PH0+5Y9c/9X/+8/FLlvKrMcaU2KC3facReqMrhNuX/Q9sFVSL2EYby7fl1mnwKsLpjEDcF365nKBlsV2Mi8VNtiEXU0618bXWZhsO3UBkKWp4GXu0zWzumvFhjasNHB9+8ZZcOft72k/Asrn6r54qcW/txJQ4anrL9NxLqHnU02djubrVp9eNlSv74Cmz9F7Jxlwi/FM7t/939/I4OwWJc/MvX5+fnpSS/9UT8/pbEKfcoXL694x8X+qlIOhLcrnQK1abPZfK05UZoDrPileWb3b//Pn8ZevYAMfgIhXkLEBXGKrefKGdoDXyHEw/Ww+rXNbWu/svPgQ9gIx/IX5Zndv/nf/xTFbe8LtiXrq5SNsUcG5S8mlWkT5D814UqSn/z3ORAMw71ZZjayLsLHQputjakgfmOeWYjdv/5f/wSDk+mj/PyznYDFznH7Rmb1ayBnULXniDqKMcaX0ZjnEyBGD2sHcRYkoahDHLQfZ/6e0MG2bZLBToVvxzPLsftX//Mfx06hzwC8gO42Ez+1p47DR4eJ874iY5YNrSq7oz4Rb3QYDWjo0lu1UwYFIjB0cFS6bQVEWo74FjyzInZ/9j/+UQwm6228DE7iK6P3LPgY9kwq/jIQo9s+DPa2m9JMt89Q3IJmzSbSGjUhhzTSkdqIyNDCkF49i5dinVwgG74qz9TY83GU21vs/uV//4e2c2Yt859yX0cvk12jMDF6xMp6cVvFtvUbxFHM7TfdlRS0nn5ZYWseeDedEgfCAIeujgqtvnAC7ZOvxTNYcRwH7cf9ecDtKHb/4q//gaxNceJrJgR1/GKEgy6frYTrvsE2uvEjLWdqmLRiRuJNyDhT2Yjgvi4By8YEvdEDTsUt8iJcL3WQDnSjr4bghOGTm3vmjcTRgMIuvVU7ZVAgnEIHYXsUu3/+V3+CwZwKzn2jDq4Akh35jYeHhzyvTTM9jik31wHaWjlURJ1XKUzcILyfmFHrTo/5HDDWdhUTszRjMKSrk5rVnyRLEsyuFWgfo9fBSZ7Zk1g73ug1vAJ94RJ5gN0/+2+/1roYJ5bXVoWNlpkyVRW2ciJ4d6gY8hhQx9blVM/dPBEqPP38opDllu+JQxhCUfjYOCGUF4U4yBZKL2o1IjxHJIZB5IEAcTvPWB0mLfW06K6kCCmbFxU+aXg3ncpxsXZUYRjM6WD3u7/8Iq8iAadV60pAmAy0XKD050XNbpqraxMYULA12GXlHOY+ZaFU0liFPuWUE58GVh3Je1IQlLRL85U9I2mq3TPaDsQo6WWt2IhI0nMoGxP0ZjgMSvtwNOOQk9uD3W//8tG8YTKGrQnLjpGxORvvR5n02FPLDuj7frSTjkTIJy010QqR5EggeWX+iJtkVUwDs3zop4Es3tqYxIlyr7MBnpUNGXg1z6BXe8bRjMI2IAZaQxN1MuiFqW5UOXeJFAa9+81/fYSFx6RpZUgUBspQV5wAwBY/1OFWqHSO+mVUwqO6Yi8iJT5xH9lMzPgzZHWIgVpZeVEjw4Kq0hUDY2FlKc+kGryv7RnnAZ6JTOxCraQ4ihUWL5G8JoJa2P3mv+w0aiuDI812C2XvbheyWjsbUNpA+TghqZA5YJS1nway1YloNi2OTZx7Nc/IDby3ac/4OCGMSqWVA089xd4lfgiWvWHmbPCANG0C28uf39u1vbu8zSttdCxd0hetDSys2ACfBDhDjfGS+qR3Bh6Hjw43zPseDgtT+MfXuqssp1aHLTDzjAk8oy3OkGArhE7thBDbvWG2+9P//KAxHN8MEoWpeu1s965yIo1C9QNROgYp9DgCL2zzNFCbcsOdVoqIFX9JUVXepOdmGJ6hsmfQRUW6EUdHt04DzocU+wD1BCldf0asm+OdJTKoTKiNV4oHceLQdsBSDGZKIPs1MYhwThhSGi9EZUHGORPiiK7xAfbjAvqa9bmoUTlDkFm+sMcqBEy2kk52XMUz0mF4xp6SQvgALTINpGz/htnuN8wNG9vMzRRGVhI8kg42n1MhwdBGOicXbO2+I5QNbuT48gjNnCLge8lHdoVAFeLs8Oq0FeKZu3jmXpUdgpGJvE8DPMC5sdoSaZc7B7rKrlYKhWHb+VDwxED4+XtUOshy0oEDrQo621xmhiRBTZI4Il4QwnAN2Cd4QwTS+VP8uRJHnqVt7hlJHp4RdMpgIVpg9dN13zDb+3bNppgsQLEJraJVFhR2W15J0I5Qe/VcjJJid8M/hLNQvi6nrSPqJEQUWuVkIOicCJUENn/mgXM1a75mIm7i64uP1AjDanDFbPCZWBg0KoTIDnqhuDWPI2ixuum4DsTNPFuW80ANVmRVSSdg7g2r5Kcd09RITlyaCsFgTCpkshnF9rMGqZevYfYitQU8H7HN3lS1YOy0xomP4ER2oAQdudQR78HSCpHSFyWRU5q1gpth8kzEowj6TLeLNl9w98sRJmFIVhiIcKpFiFbu7U2OiFqcnBmkwZCqCxfpepgOreIWqRBYIGKoTHYqoFxpujnsmZJra6WQI6UpATK6+fBSlLnJMy9DQnYjxc+Gq/NWMP9OAhdaDqQ6HRIUr9+A/bMums4FsiKVwuJhYSMPtvaMUZ6RXHzQhqdGr1WttwjMBjU3WJY94Et6R2dDcJr5eUNVkpi3Z4a/sZhIWE0rlkChPNVmCH/Qz6CtXuFqnrEnVEUTAtWOIEmq8zpoCcATQ9LB0ohNrK/Oa2PwdyZURgi0jXTomChvRVU6dDKYzWawXMnirs5+R6fW2PRWnhHa8679BLJg24W1UyEIbxJg5IUI7VSEcMBGkKFkgG+mXZDXCVF9AkcDF0Tb7NWxTRGRSUxu/6MxxZ89cZ8NMPNMSYn9DozqDa1HSqUC4nwFrS3BsVLSZguzibotLrN54qbKEjsfhs0Jil+m7Z06tiEcg7w4W62zdYySG3kmrkHOgBqth2EiPVeH+VM57ZJ72pANfgZmparvehDPMLeUFJBksJfLBWhIHTgParOVRwZKmDPTCk9KgzpVVkcLEX+LtCscow5WddwICPEM4ckBcVopEiFp0xFaDbCDp22WlE4Gt9an/4JB4oB2wuZZMEPJQg/9WUk/OL/3TLapZ/INbu+2Hq63Nj9CRuZ5o0XykbeR6l0TqbWS2TZYMGeL2O0esxspyLEsU4W57HX0OA1DlrVWkbZSFaW394xpWlmjHJVU1X8riD8l4kSyxW5lhG0G1mqp2WEShubcbnUqRMg83KZaajZpYlPNm4EgeIvad+hmtXFMUqGA0ut7BhnaV4kDqCoPNk+HyjiqkiV1HgXV2ups0D7KLTC7zMVMeE78MzfA3MvEJGJG0JpjbDlyuSKnISJaLpajo/PAuqds5Bl8Qu0PPpn11ilwgEmcU0Pn7aOKVQIOWMzOdc1ZwFwMNpMCkyEi7AWOYnYznijB0VdTSnLhXA3OhWXUJ5VdpJ8uGqJ+BcxmbOaZJJndQi80qTFXwFyUaFTj5H38svvyZVe1XcDFRGv5GdQHU530Hvs4uImz5wagLrgShvCcOLvBf4grqbzU8rn0RUCIr+QiV1uqjhqGTLZs6Rn62RHtDNNbAud6mz2qtpkS5bDW+qWUl7Ac4+cq0gLcx4gL4QFT8wxzNePBRPiIE61ZjqVX5ApurV5rY/BHliRapv+kblyRemPPDGMHqwN+WyAiItK1tvzuk4kGWlm50jBasmN3pR0vBD6tFGknPx6znUp8HFjnkw22zWYWQ03sI9e2PA7hLpjbYG98lbPJetqRcpC/fJGe0p7Z2yvC5BSiFU9gfKq80nKJZ0YqMCWwavcjIDYym4f0W8K6E5SsVugj/P5vfsuBypN5okwW18a17QQxHmA1sFuxvK39wi4lqcD4o6lQe4o4Xgl4aMrbbSSDdt1hZUR9FJTmBgmhfYIklTG3PdLbtTzTghhpl8Tm53wvmB0SYhOzA2uImahlzVDy93/4baKDQUIbFgzq3jbhJtsBQZQ5k2Jl+VOZr4XWu7HfBttBkmG7UQV6jrE7pQN54C2t1Cu7RlphiCqrWnGKaYmoFcYzptf1jEa0Z+7uHXfnP3mQ2qfBVog9qIqmqBmtnA1TLgAs9MYlVjNzFmKwCpzMzlE30zgUg93OUfkcPp0KcJ6lwqC1ifUEvl6aG7SRa9j64GpAiRgjoLYqa+6iw0kA+sUbhgZk42IGl3rGHPKRcT7s43RwClBlbrjWEol6vEji3//N76QQPSpSORfonDHj/ltI1seqYd5gF0Iy4g1GlVfFv6Pe4R+oFmqbzw6ecQp4M1pXAgphWRzBFUNP4GiOyfiCK3zR9PcIYUXPhKF4oJCsi7FOAuHKS+SUrLpu4DioDcDg/MXomKDa1lABTYbU4pLMsrXpyzgzEUoFI/R7iG/iAXtCzqmdqV6GqGElpS+ajwncdllz6z06b+IZp1gshtDWuQBuskTG/H//h99VL1vsTcjAZsdwzgMRtkojzdGM3aI6PSl1OonRYB3iA+z1OeKBzzl8CnTCDimcDOD63u7IBS9WOFTImunDOG9CBos8I4S1hMVWAl+vGyyRNW/9/g+sFMLUOzuqcYt9gxU2qA0z2khvfbz7e+ScYej3MOucjWuhPj2Kb7LtY58wPAYJiZKEx6eF1gicwW0wXnHkbGr4W3EwxteO6jU8o1Y27GJYwu58iMHD5NVg+YLNlwPeLJFkw+gaAjAuDUUNZO1s2wyoac/mFdg9Dd2zam08e/KCCGn+bPwo+UTuDMEFpH47IknArKAXu5wZClst5xmV4cKcNrs0FDWwxDPeSco7IVTdYomcskHIAKH23xhsi+aYTBXKqCN8zsAYlW3vTps09xErlAMt3WhFCY1zIVOCwKTA8sAUOfnC7xs5jjW+icC8QO1PDQMHTWd4Zm/3SNz3Ol8GROIDzX/JgONL5F42DByoO4Pa5+UI3h/7CcZAtpDezL2Mh4luqrzSojjmj4g6+IJOBJKgXOATwuuCXXHmc9LG+4cydpQjeDt2tNR2HL/REnk8GwTxuAw1/iL0cG+7IiNqW3vJg+RCbVw7qIBdE2NGyOU9f5wQ9kVayAZGabikzHR4F0i6CDV+H91etTa2l5dNNVnjMdMHPlPRYEh84Iy31Tb8/SXy3Wy4NaQbfghhVaeQB4Pa+DnplTDkZtu70ybNfcROyYHW3Ghnkd9xT58Q9omghHB9ZIk8/v8wbw5fSdVWL263eCrjmi+LBf6+mP/SyUMKmJdQl1uYA7ytp4fxlz1H9xqyEEcv9w7ajgnpLjajbOWLUHwzzl/MNTG+DKM+eV6pcb4DaQbkTJlilKEkhM8QgZNEG84Z+yQ+KA983dkAoG05PihH4C3v8SekU/nE7rZfjGQEfnH4s7UP0sFjwJy+BEPn3taThLFfQMrrENXEGIwlsdH54JzIdyanb2ZiemzHaobqVZximG3EVKpMnZkMakpQS7xho/0Svs5sCHBMwaSqQtJgpML0SH/fKarxClb7L04SbDqH3bX6Xoih5GvCT4DyrcrOBqsVtByy4f7etfYgGBaItolJ+mSAZ8R8Z5IX6cKGVGDgjL//YmtSobLBtecDaB2PQ0oDhgpfczYIGNsw3VVj5o6pq+0rx9jKgmkOZRPM6bMRmR1+E6/3L9R3qfMVrqFanjwq3hL6QP3qmk5OjlhCB1HAUU/st18iv/ZsCPYMrh1vqMqBxqDKPG39V5aPKhheuASlReXB/YuTQPWz6efXB1o6J2aoPHi4f3m4f90pG7p2I8yklPVimAwEygCqzBbe40/Y84BHtb2dEcmAItwqBXzcY8Cgv41sELB6D6NhyobRY2Zov5oYmLvjbET2mAkSfuXB08vD0+uDa9Li+aXmCXeOfEKuU3/3oCR4eVR5UP2qWjnRacFzyGjnSQJbC0mDkQorL5HfTDYM4IXjOGjfs3PgwP6z0aHlLH7xBKA8SBL8/KKyc52cqHmC9yTRhpGKLvEm8MmDly8Pz18eVFOcHBxKxmiMlY3I/bQQT14+NnnE3T078DdhJEE2wZwO7v/ub/+iyG8H8cEFwEcLUZ4nGC58FuGeT7BR7l9VP929vJjmkPu7Z0AAiI3O3df7h7uH3d2D6sfXexGUV9V8HMqfLO+3N01oFhIFoxdmJIvvljlsIQM8HjHzFkhrEOIAu//0539W5LcD7Lyo1PjLMLl9ygOiTvif7l9+vn/++e6ZWi3QNI6ibi6vVZNDKf5mPoRTPHVrOp3K2kT/soUw80Fe1cogaJem702Qbs6GSq5mVcRbLMiGw6Q8GW3ht4kpFe6fCTNRf/7p7sl5APGTiUqOO/rslZpFKjmcTz7byYlKCIervERCJAPyNy/E+53CdwjHDBN+M/o9XJoNR1Lhg+R4o4G0+rZQ9nYqOJYsCh11zQ13z8qDxFt14s3Z7yH8k6QM95RQ9WzW19yAFPtFc3o7iG1F05Ubvc2B98voC9RS1Ic4MxswYMA0lV5dYvko1V79WqWZZqj91QND2Ngozwo1Jfx8z0zgwtzw01gpSBT1IW+8oFRONA0rCOfEIPBVTQ8OKCEs/ySajnFPFWcVM/kc52RDOUUwkV3bYNtcc2hWaNRWrxlKt1ZR2n4TwBZs1ASQVMiiUNMDLU+EliSQvXIIYzL0DdJu5+TWQUM6aFU7jtBUboujtnTXadkwhbMMcAuuueMq2tnNKui5sSbJmidx0OgfDGa2NeSmRi5C2d722jQyIKnw9EcnBGvENB/4eYEgk94rDXsGN87WCx5Qeat6WvpdMhRiE5yQDeUOIaq3X3J5XOG3IyiDcMF9NQ26ZPKYAbvats2MvBxlextO0tfEMNYFdtWIQwhqDJQlHxtzpEPPBLOaVIBMTmiEW/Xy7vr4MBvKF8JIAjyiMMv+++eEXB6pq2V8lENVTJMKvnhm8nROwKeMKgwj2X5m56TVmbjYg5ieVJC9MjN5kGXiJ9nIOZBssBmni5l1jlF1FZlkGKngOn1DcIh6bZyyUiQJnAf2CPYnAzJD+hRxUWMTlSJJDvKm0sLcVM+siXmD+NDOI6nwQXK8YXWJE8kFStmi1YE7CF02OjPGrFCpcAF6lKQQbHYdfx5MifJjBQoEzenmISvjnWyYnD7lQdzhiZGQVxLgkXWetJSdwYG1e0lgmkqvLig5K9Ve/SYRA6d4Ez5NoLzPAVvtC4W+VliWCkGPLYn4Qk1MDZUK+oOgnQPutETgcXw8N8S5WOtzvefJzZ60ZMdkWowRlTgru9TRzTWHZoVGbfWaoVg254+9WWPNivpZKyMW2XDyQIQtSs8PeZ2EPQ4EXgpmMuCd6J4bkhAcdLflYvdwLBvmjkgInQeZDKi3f9JSu4wKNCq1NnC46r2MpeAHrPaNpawWQSog5QQWJ2HOxzr2SkHhA4y0UHTQfU9R/hy8yYYKgP2I0+MIz5DXfdICk2qJMgwxqw45dU0/pcMo6rbKvQwyJRRx0/UyeeAzAZXEeTBaEXaCP5fAu1m8p6UkEKH2sV58qPlFeP+6gXKjJy3w9BFV0KWMxDkYCXnHxuolM7qYJhW8PC26l7H0ZN78ehkFnrZIheLmTa0Uflfz3u9wkgqkxXWyAdezcQDi/Zs8afEuB60PQ3omqLPTOozY0NhEpUiSg7yptLB01TN9IncQsyMTorCkR27OhGSDzKfH0WGLEZXkEK8RSYWREHEUHVYWPsuGkQqEytEi5Db+ak9avEsBUUNOdx4g2jpYkyk2UyF3KVlKVriXsYEamKyyRNUokDVxvSuGOVqvOj06FR6ntCgXDUethrfXDSpJBSbDzoMsE1d70tJq6KgDXJpc+V4G2BVcsWqlkDgzVw3P9ZeJQ+QmwnlA2YUYc8P62cCdzAwEgMJFE2dDz8w5Nb00OFfU9TJFalTz6UjbyzzVcbbpyiAhrGDrujUZoPqPtWw5QacIOfzSNkR0TofqCQetdOYjWkTZ1UY5S0zMkD0OTlRNLVeBZaVYh0jeTH5nw/ACIutsSCoQD1+yxdH4btk5MSVEIgfnum1LOJMTVTuQ9yTBH+9/pnZCkBNEFN08KsU6N626MmkaZQ4ZTqIgJdnwfkKAtMgzHY9rAr149c6GcDaU/baWmmmwEiL+2nPZolQIOiEsC3FM6cSvkqBmBZ7+ZmLw+d33EVGs9VFthx2WcbTmuUq74qx6JITaq7MGnobTey7BdaTMcLBSoEFdIiUweDChUkLg5eWpEJiPA1Bx6qlI8wQRImZ7CVHzgdtRZtLnvVL8a54Lt+ajWi1hWNaNrFL1WRjWXrCP4zpSZphlA67wyVQeJCe4XMLvboynVoavUSwll3u6aHAqZNUnWnUGJ2AzTTrk72LWIWnB8ExC5J85OxEHc3eLmRADYeP6Y5FboCTOdNgM87nBjrDX/OjNZwwTg2Ow3ZMWng7NJJIHRKjO5qrdkpj1fHAiurOzARGZeLxMDBGZ/yohPGwOWJiHr+R5dnYtWFbfO6jeWPL+SpEzA6dkVhjlmI9WhFMwZbqdyxmcE5dQuQ++uQQ1qmzZv5epFUotY7FoaxmmlwvB8K2dc6IitB2GFErfUpYm1WV1jGwoF+SmvFxWEYprVrtimGPiicS+QHFxhDpO0WTe/3zUWPEJf1LNc4MTgpZpTUxPvTxoCgkfT+/YcKC7rgnzHHKHRAttudVhbRxcRUoTlzglhd0trJ6jpfiJYV33pbBbEVrugOKAILPNAuGE85zkxrLXJouoLykRj1lgEhtz2wKEu4SqDLnWZDupB1eRqe36UFd/0kI8lBAOUlaNpMI29zJJuFopuM/0RdLcZMLiwPDtpnom6G80ER4zW9dBzY1UQMqQSDYkFVI2wcHcIESfnKkmrwaJQ6iKz1GK6U30GIJ8L6NCHvTVCbV74flkg988dBI4MP3u0SaBsThLqVmhRbcy1W91vM2GN5BrroBImSVEBclhWdf85gb/I3dPaJLSyGlKBmhWeMz7BXx9VsUn66zrIpiP4z347x6RWKKdEFviBO4YvD2Q0mGohEip4+sDUeKfDBiXzH3dUFY7NtScnQQm83alQp+vZrYQxUHcwnZIgZDcpELrk55r4202REbkmbwyFIm6XqmyhRbmaf87IToVyAPuqnJ0CHaE6kv1nKxf7nZf+Jr9eHdxcULUWPGZwq9J6ItleSqqtal12iAVhDfZICmRRH39Jy2hSALHphq2wiQoJQtTygB+oLB4+3z17P2qhNh5N6eynXaZvjVKHMzKInbiT04gKzOEJ4YqW2GWDUhpeaVZz0s2dUuYfwk3fZlfL8Ln7xpHq8Sp8oDyuvuVa5/HKvKYryHmQz9Gd7a3zQRuzdlEJqGeGOyb7TCyIaGI2VauLp6thA+cbuTpmHgiJel/CxCWDs1MqWH7cEsSglOWaLmeohVfMWTweg+zDjOHT9lW9X4qFHMTm2A2Nwg3edIiYF6k2ODNrD0CkuBDlDJRjMWC9YJQ+Qx+/NXr46+p+2ymQzzW88TRUmaG4TvcnGqIo1sUYFz02QTzbIjBFFIherBSOiGsis1YDc0Np7zWT5GUHy3tKjjdufaMVc2U3iGsWi1jjR9n84jifhlHy8NKr8w3g1tSQQy9AEX09phlA3paKlq61AzR0yA9NkCY86QlnlKhNQevhJKWzRvRFYnJOURdAXuss5ny5U98WptWuyOqcDLbpzBk0KqVTBqbyWDi4F3a4U+uxDlSwDqUJlthPjcY5D6x8eOOMqNS3jqtNT1ME0OmH4oFkXbKQrv+KvC9TItDrlsPUMqMhLBzmCEcucztjqLnDGoXn9zxXhLCA2nP2Z+ehxx+VbNCvIHo1m1j+DPTk6ljTePSmvcLfBduwvdggHqhXlMq4FnlXJybVJA6/kIL4nTLt1TWR8DXCRXTvs9mn9CEzYFHwwP59lJqHaqPevv7cebmL8qZZ33gvSeDFOYGBDkVvij8pj2XVCaRQx4ShtYhONRkffQn6A8kcb74ERAfOSct1MYu3SqUF6vW4/tJCy6wj+LEHFT+IR257GazHjodNQ21DoSqU4Ew7K+M0jbFOz6iVxr9/TgXMoMowqG/B+Hdol0OEyK0V5akgvrU6mwRiBqit8XB9ylaZOzthBhEGqmMCxScUgFrvTQ84peeUXVKCnw2s7OBERcIOgnSoU7Zjk3N7YS2AjDCsBePcpANScmX6jFB9ezbUYl9ZUBdT3RpoSqWu8sQi0bcUdEb4s23a2Zyy16KQiKNfPtJ055yezvvo5MIx+UU9JSoVfPXzM/2CIfEPY+HvUIlFz1sNUyatA6coGOpTioMgbWdyS/zHTBol4yq79GOxULMw9M5lyJxed4ck30Z4UM9J6VEYom4EmbZMBnprWFDE4wRkswQhzjaGLT3hXgQZ/nKlIsp5gZmSwcji7BGeKXICuWE+Ij/hagrhkfum4iNSs/PlOoFTW16tKYRpKeHUGc44dybHuY0EwDi6to8xUNq+BEpV8L+3FDiuy5L0+oNS6PofD+OKz7gTiHfgTq7v8yus8FJwKWT68yZdooZKQ80JjmhvTWvHqaJQZeuSgjFphKxln9J8QWsixMR9NZKtCJxjHaxLrs2E0tTK9JjntgvOZqM1ED6m0+YF31tvFkpgkmTUqp17DpU74Gp437BO67tBU4In4hOhXEV7VrLLSNUZVag3vBeBpVyO608cEhojzh+OJ4FS0197TIBJVqRslrI8LSIiAjRFnRQuMIQMWoPoYRTE1fH2+uGqCIVR602NK75QLUTuS6ks1I2XYU+in3onA29Oib2lQeZG1hH/fTTFw33hCGzgj9+4nigVYUk+l2AKaQ+HfNsg/mcgJmtr1ecgs9kA/e3ucHORfS+bOjet39CUbL7SbGXVDJkMKHlQ4zp6lx8yvn43FDDpFlqbdxkAwR2VWsXIlZVXe0kAaU+E8DC6QVC9bih4nLBF9j1KRKN0ljFPlJjdsLg/JiBo2diGo+GPHq3qhTsKRF8HtNFCfHkZx7OjOiAMgMmqULM6j2o5b2yjyNjj+FIKrxtGThbyjsrRYHwVC1GclzqCvZpT1pylaAyPWnxRQN9ci3Zs3TDk7Oa4n0IVMBqkdpUz2nAh5h5S1yUwaQd/GwNcNqRCsS+MoDJKcWfm4Uwp9STChCtCFwvLR9jLwlMU+nVRR3mpdqr36TtwDsS37tuGCqKcA2hMq0L+JK06PmW4t2iuzgVOiHIEi8NHCIVYKsIEW+AJW6rq0iFjBYfHKemWpqcU28QfzTcseyC5uVlqKOeKWF8RtJFean6wt9+WAnxCTCR3YRc6qFYrmxmhUZt9ZqhtGslj2n78dwQxGCPr3LCk5aiU5QEeQ8mpb4XIK7yr4OR2iHB6fWYocTycvId3suYwefwEApCq6Uwd1+5daaPDoXmEGPQzaN6Wikd2HFDN68DFAgc3ehJLf8oZVXHY87jpC/FnkyKpH8wmA1t2e4p/GE2qGv1NgHtkpXigyctJEoWC6dFJ0GFJFwwyVaVbeMHhPxhdqISF9Dd/q70YT9tdUTEMHQO964O2Q3iIBXJsr/2ihXQURPl1iIYVdOD2aLVYM7WdLUsBuKC1q206pBT870gl0G4qFvlBG7EBKs9YWjLdlL4hLlh6t0206I6ZxsxnqaHTBhjtzNAujA0JnlCxphXvmPpL0M6wfl5ThMVg5kBCBr3MqxNousCtjRxEY0O3T7dyKkUJ0Nudf0ucqi6wUvKNI+qzRY6soroegkmw0cSOA8c/k1/Eu+UlcJdy8j2LLsiHIOEPLGvVFCL6ozSy6okW+uLTTLg5/sn0fn27cw2jCEnfB54hggP5JMLpgVfe0ouzb2COF20749lAI6Cims5t0HXd0qjIxFNpL8bi3OEUnfJUIjliOhI75kgXuIL5uMXB+K6JsqNSQ7yptLC3ByIgag6COrTsiGYjBQh49MSR2QtN5FGxCsvUcVJbWMSb+k96NZ7Kmgf+x0AuMQGouvHEuNKhZzbu2ohBTM3kB8s79HTTPAshHm5fIAjHZICe3Xn3LDarXp593ygYTDlQaYEu4uQVxLYje3DlOHAqvFhysm3Redkg4DlLt4xr1kLhI8gz+J9QeDJLcnrH06YaJW5PRRPg7KHsZUW5qjaH4Gx3zP3sEKNqcgER60LvVWhht06pUIOnohZZ3uw8nKaG5IKrtM3BIeoL8SUCj7X48OfrvCTeGdmw8CBtfjaLfhci0J+YzEzGxqjdxYFfsinFfXaYctZR+IF51DV7JJViQSI91V4fJSL1rwJRGGloAPKoYdvTs0cDuzsK30qepQ4EGx2rQcSRSUXSUfV7Vn3Og9lZhTOlBAfVtTtSdYIx1v1aT4857bo0mwQsLzNhnAjLnMqMF+R0U7hqm1YGUP+YjNngItdkIJJELaHXQg4CxHKdWs/6OzVwaqgRbwgT3EB5csojy0FL0KPjQ4oQZMcmjxAH7TykdLCxMkgbGyGH5IK+I2ZwGX7n/dekA0HQBU0ULxjRv3omrV3y8U/TZ10to+tvgPgOh8P8S5HPZeQB6wy9hSlxy7DHgcCL5lRw89kRae2gtW9HH0yNvThSbdFi7MBtdhYcM9vldEyZpWfpqbU5O9Wm5Crh3yq239q8gVU35E/eSBnyYzhIsz5WF6vFJQF/zHgGj5U6szWC/kkuqmOwi7k+OUYZiDGkqRrUhgDWBfYjQFWiM6H6h7BrENxLh/BrXiOCRCWpQCExWW3xK2NMJfc0sFzdYSKUF39TgJKsvFAOGzowxnzzDf7zF+XZUOAesOM/L5fzEhGM8V1RnvKqmGfozuXJXMzLKLM8FvP4pwzxjanv0+g08WdguYWz5KjKb6LU0moiNZ5uI4PYZ4kM88hImfa68vybGj77RpOXILksM2SzmZcGJga1Xzg6X8qNCYJG6mimVDi1MfiqDNyA3TwUir5VHRA7WfjFj40/yHLDlySDcPsCODRQv+GEumWWciNC8wIJmPM0NrHU6nbWSyNjopaPGCJ0Pdgnra9DLdEaC/MdbSd8zGq/2B1RR/C2XMDspAi6ZdmwzAbwpHox46VzjEgblpmRtDGWJZN6pyQoNxBSKj1GSptipIyisS5hXIa4MCmWd3Eh8iCQO4KKwXca9XMyZpEK2Owc7kZgfnYd4N/3uiCjssIST+ZuAZyp+OiSrq59QL5t/ShJaosvW5AzySa6oQkM2eSmsPVc03YGBznMwlBLlzZ+dCVESeUpedLz/C46/o+3L8tWjg3WFfzPXKBvfUlfduAUHSYOQ56e6wj5aY+3Je4eKVIDJxffT2Vosbqsj6QWUJNsO9HK3X81Mc+C7GWFOsfc27kw5K7JBtsg3wC05RhTIzY/pKeJEAcddqvkgZ7KInZnCv+K/DhTOLyq8jYA9O2J7sxZjMMKSECnaxKjCtmhGX5sa7Aw123no2YIFtu50PK8qvI1KU31LUv6TUxTBLreTvEpZE5FZEScdN7E2msLidh8txEXduHVd7+tssliOrJL5PXwZ64isr0iRg3bqGOeZp/Scw7Vf3eTx09KyOEG/kwkERycZX3Kd6i0vwKQFC/U8sXZjowiY27bAHCPckaCWFNVpJ6HR/uS9kmG9byyOcY3q+PTLrUd20dtJXPtOZGKvjnqurjNk6IKJOyGNfx4b6UVbIhHF1fxYQC3h/E+Lx8ztT6rOw2CpUgSalZIR9xgLYml8gsSybymiiJMmA5xEsugIC6ySV9/46dzlf/IsD+NzzXmh7Mx/Ee/Ou3HyRILU6Iy4Ca9tvtfCh6WTbAwbzCbpwczX1DDCkEIOdlvuvtebtSIe1osjwhikMkqgwpEP6MrhrLcNtuuZ+DXhnS5lD37qYYUijIXZINscFMi924nooZV7mk1wLhiaFjo5PVX/7MDwSk0fosUWZKhSn8fK9w8X8MULdhy+18WBLlx4Xwl1jCazB1UWN1WR/4sIR68XYkEqf+5R5/K9wpMvS5NCGmVDAreK77HwNu78OSuzAbbDxM55f0ioFl2JR1U7u5YYYv6S0oP/VLKug07V8H6N+K6F9c45edNFAcTlepO9trZpLfkKtfoYDIJNQTwyXBu7kPW+LSbMCQWOLA2ABnWZ+RNmZtWJylzH47xkStFz5liVZ+K2JES8Wun8L8LmYd2kB8B/OJs/NslgrF3MTJYFCLuI0PTVj0smwIkmJo7wU16yiOUwu2fuz302E+dtzg70UBgtR2S53BPTfwy83fwn8MuLkPLfrSbCibzZeazJoCU2Y46dxzuTHFQdzCdkgJQSqkPWo85kelOmyqlSI+j1OimOqK4n4ZR5u/FwhxmPPsC9XqrIFnooZkbMTd0IeS+7Dsm3dzcCHkt1t4G0nJnI9pqFV7rUY252Myw86qWfrx1wQmUcck7LGpFL49UrUbfai+AHPW79jVxPBlEte/XzYLGBaXhmfhoP+Nffi4/Jt3rZ7czqaMGUQaqYwLjJnMIHhOZ//mqM1wnGKYjvLgQRLIAw9QRQs54Y37aOtuXVc7SUCZrzjxkaQ4IaY8IFHs02ISsyAuQw+UImxu5cPdGt/DnGkXUjVmINy3TjTtmbC38z7aAbEhGe0IafGW9qzimbQdGLpZMtWokwRKgATb35kk2BT/9kMW6S7mb552UPFXzQmUxqwanT2WWGo2cQFmQ0Oa77V9uCwbSr8oWxBpM0YtJLsPcbQxaBsEYjlldOLkvO5TFjN6hvdlEEHywB471gUyg26c0/OfBDHRxc4qQZZl2lPCEGcONt9GIOUDaz5EDRQHbw3zvYEPF88Nw5jUMQqv94YYiO4JOXCnkO9gMiDnbhnAJX3FhqTO2UxsmrmFeXi24cNR/TnwhH/vF2EIc2XAbf5jQA3vmj8avX9VH66xUgSTYjEjDaFdh+o9MHXcLzJAh2JGpTMalwFVO1pMfep89DSNL5pnun3wO3ajiPOt/mPAxGnYMGjXoXoPTB33C0q6tqUn+nCV6waJZ4MaVasNN1Uuq/b5VDP2FS7pBzFp5T7pbNF708Oczo/FzG9HVaLtXBZch5TFKFZDW++gKii59tKmPlxpboAXmzYG1iYRgz3esAth2V1XOwZQVrukh21aTFgF0xYUcQhK/abkaJTRQPqHoXkWvSqKoVWlRpZJROMlb9iFiD5VV/tiH97/3d/+BTosx/SZKt8d8fFfvrnhr3f5W4X1bTL/Sqh264PbGqXONXI4oh+XomspXSdrn7Lp0GYA6GOYFBNMU6VxJnqOqBGquM6YvydoOW7tw/WyISh7YkzZU9/3KzNE2MKYWsbMIOWsJcagtGgtezYm69+wYZhxYngOBIG3LQNveJ4oZTlu58ONskGwJWWSVFcW2wbXb8wYo1qzyRgsUe3Zr21Qt2FG+p+IA6+djtNFLMftfLh2NgQH9pRJqF5fL4x51T46G0PRKM0sFwN8GU/LoQ3fJya3XM+H22SDMOknXVMPe6B5rlItPlqQoqnzAZCUtmEcDWZmfJ+4ug83y4Zgbg/VqGMGO64PYBVL9UGzcT12fxm4og+VMltiEinCalE8ZfXVzZGi9iNXOs1q4vnLwGSvnRCHbOPDjbNBKO0j3gqxGy19gfO2jKOMSjng8wvDnu12CLvtpQPvpYyjjEo54HME22fDwBElhqJvyz7eN+CXhY19eMVsEKTQZeUHBg48c3o5AdfNhh/4uvEjG35gwo9s+IEJP7LhByb8yIYfmPAjG35gwo9s+IEJP7LhBxp3d38P7gZxzLpuLGwAAAAASUVORK5CYII=">
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="launch" class="screen" hidden title="Click to start">
+    <div class="green-flag">
+      <svg viewBox="0 0 16.63 17.5" width="42" height="44">
+        <defs><style>.cls-1,.cls-2{fill:#4cbf56;stroke:#45993d;stroke-linecap:round;stroke-linejoin:round;}.cls-2{stroke-width:1.5px;}</style></defs>
+        <path class="cls-1" d="M.75,2A6.44,6.44,0,0,1,8.44,2h0a6.44,6.44,0,0,0,7.69,0V12.4a6.44,6.44,0,0,1-7.69,0h0a6.44,6.44,0,0,0-7.69,0"/>
+        <line class="cls-2" x1="0.75" y1="16.75" x2="0.75" y2="0.75"/>
+      </svg>
+    </div>
+  </div>
+
+  <div id="loading" class="screen">
+    <noscript>Enable JavaScript</noscript>
+    <h1 class="loading-text">loading</h1>
+    
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="loading-inner"></div></div>
+  </div>
+
+  <div id="error" class="screen" hidden>
+    <h1>Error</h1>
+    <details>
+      <summary id="error-message"></summary>
+      <p id="error-stack"></p>
+    </details>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    const appElement = document.getElementById('app');
+    const launchScreen = document.getElementById('launch');
+    const loadingScreen = document.getElementById('loading');
+    const loadingInner = document.getElementById('loading-inner');
+    const errorScreen = document.getElementById('error');
+    const errorScreenMessage = document.getElementById('error-message');
+    const errorScreenStack = document.getElementById('error-stack');
+
+    const handleError = (error) => {
+      console.error(error);
+      if (!errorScreen.hidden) return;
+      errorScreen.hidden = false;
+      errorScreenMessage.textContent = '' + error;
+      let debug = error && error.stack || 'no stack';
+      debug += '\nUser agent: ' + navigator.userAgent;
+      errorScreenStack.textContent = debug;
+    };
+    const setProgress = (progress) => {
+      if (loadingInner) loadingInner.style.width = progress * 100 + '%';
+    };
+    const interpolate = (a, b, t) => a + t * (b - a);
+
+    try {
+      setProgress(0.1);
+
+      const scaffolding = new Scaffolding.Scaffolding();
+      scaffolding.width = 480;
+      scaffolding.height = 360;
+      scaffolding.resizeMode = "preserve-ratio";
+      scaffolding.editableLists = false;
+      scaffolding.usePackagedRuntime = true;
+      scaffolding.setup();
+      scaffolding.appendTo(appElement);
+
+      const vm = scaffolding.vm;
+      window.scaffolding = scaffolding;
+      window.vm = scaffolding.vm;
+      window.Scratch = {
+        vm,
+        renderer: vm.renderer,
+        audioEngine: vm.runtime.audioEngine,
+        bitmapAdapter: vm.runtime.v2BitmapAdapter,
+        videoProvider: vm.runtime.ioDevices.video.provider
+      };
+
+      scaffolding.setUsername("player####".replace(/#/g, () => Math.floor(Math.random() * 10)));
+      scaffolding.setAccentColor("#ff4c4c");
+
+      scaffolding.addCloudProvider(new Scaffolding.Cloud.WebSocketProvider(["wss://clouddata.turbowarp.org","wss://clouddata.turbowarp.xyz"], "p4-@turbocraft.sb3"));
+
+      vm.setTurboMode(false);
+      if (vm.setInterpolation) vm.setInterpolation(false);
+      if (vm.setFramerate) vm.setFramerate(30);
+      if (vm.renderer.setUseHighQualityRender) vm.renderer.setUseHighQualityRender(false);
+      if (vm.setRuntimeOptions) vm.setRuntimeOptions({
+        fencing: true,
+        miscLimits: true,
+        maxClones: 300,
+      });
+      if (vm.setCompilerOptions) vm.setCompilerOptions({
+        enabled: true,
+        warpTimer: false
+      });
+
+      if (typeof ScaffoldingAddons !== 'undefined') {
+        ScaffoldingAddons.run(scaffolding, {"gamepad":false,"pointerlock":false,"specialCloudBehaviors":false,"unsafeCloudBehaviors":false,"pause":false});
+      }
+
+      scaffolding.setExtensionSecurityManager({
+        getSandboxMode: 'unsandboxed',
+        canLoadExtensionFromProject: (url) => {
+          handleError(new Error('Missing custom extension: ' + url));
+          return Promise.resolve(false);
+        }
+      });
+      for (const extension of ["data:text/javascript;,(function(Scratch)%20%7B%20(function(Scratch)%20%7B%0D%0A%20%20'use%20strict'%3B%0D%0A%0D%0A%20%20let%20denied%20%3D%20false%3B%0D%0A%20%20%2F**%20%40type%20%7BNotification%7Cnull%7D%20*%2F%0D%0A%20%20let%20notification%20%3D%20null%3B%0D%0A%0D%0A%20%20const%20askForNotificationPermission%20%3D%20async%20()%20%3D%3E%20%7B%0D%0A%20%20%20%20try%20%7B%0D%0A%20%20%20%20%20%20const%20allowedByVM%20%3D%20await%20Scratch.canNotify()%3B%0D%0A%20%20%20%20%20%20if%20(!allowedByVM)%20%7B%0D%0A%20%20%20%20%20%20%20%20throw%20new%20Error('Denied%20by%20VM')%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20%20%20const%20allowedByBrowser%20%3D%20await%20Notification.requestPermission()%3B%0D%0A%20%20%20%20%20%20if%20(!allowedByBrowser)%20%7B%0D%0A%20%20%20%20%20%20%20%20throw%20new%20Error('Denied%20by%20browser')%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20%20%20denied%20%3D%20false%3B%0D%0A%20%20%20%20%20%20return%20true%3B%0D%0A%20%20%20%20%7D%20catch%20(e)%20%7B%0D%0A%20%20%20%20%20%20denied%20%3D%20true%3B%0D%0A%20%20%20%20%20%20console.warn('Could%20not%20request%20notification%20permissions'%2C%20e)%3B%0D%0A%20%20%20%20%20%20return%20false%3B%0D%0A%20%20%20%20%7D%0D%0A%20%20%7D%3B%0D%0A%0D%0A%20%20const%20isAndroid%20%3D%20()%20%3D%3E%20navigator.userAgent.includes('Android')%3B%0D%0A%0D%0A%20%20const%20getServiceWorkerRegistration%20%3D%20()%20%3D%3E%20%7B%0D%0A%20%20%20%20if%20(!('serviceWorker'%20in%20navigator))%20return%20null%3B%0D%0A%20%20%20%20%2F%2F%20This%20is%20only%20needed%20on%20Android%0D%0A%20%20%20%20if%20(!isAndroid())%20return%20null%3B%0D%0A%20%20%20%20return%20navigator.serviceWorker.getRegistration()%3B%0D%0A%20%20%7D%3B%0D%0A%0D%0A%20%20class%20Notifications%20%7B%0D%0A%20%20%20%20getInfo()%20%7B%0D%0A%20%20%20%20%20%20return%20%7B%0D%0A%20%20%20%20%20%20%20%20id%3A%20'mdwaltersnotifications'%2C%0D%0A%20%20%20%20%20%20%20%20name%3A%20'Notifications'%2C%0D%0A%20%20%20%20%20%20%20%20blocks%3A%20%5B%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'requestPermission'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.COMMAND%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'request%20notification%20permission'%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'hasPermission'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.BOOLEAN%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'has%20notification%20permission'%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'showNotification'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.COMMAND%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'create%20notification%20with%20text%20%5Btext%5D'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20defaultValue%3A%20'Hello%2C%20world!'%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'closeNotification'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.COMMAND%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'close%20notification'%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%5D%0D%0A%20%20%20%20%20%20%7D%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20requestPermission()%20%7B%0D%0A%20%20%20%20%20%20return%20askForNotificationPermission()%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20hasPermission()%20%7B%0D%0A%20%20%20%20%20%20if%20(denied)%20%7B%0D%0A%20%20%20%20%20%20%20%20return%20false%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20return%20askForNotificationPermission()%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20async%20_showNotification(text)%20%7B%0D%0A%20%20%20%20%20%20if%20(await%20this.hasPermission())%20%7B%0D%0A%20%20%20%20%20%20%20%20const%20title%20%3D%20'Notification%20from%20project'%3B%0D%0A%20%20%20%20%20%20%20%20const%20options%20%3D%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20body%3A%20text%0D%0A%20%20%20%20%20%20%20%20%7D%3B%0D%0A%20%20%20%20%20%20%20%20try%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20notification%20%3D%20new%20Notification(title%2C%20options)%3B%0D%0A%20%20%20%20%20%20%20%20%7D%20catch%20(e)%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%2F%2F%20On%20Android%20we%20need%20to%20go%20through%20the%20service%20worker.%0D%0A%20%20%20%20%20%20%20%20%20%20const%20registration%20%3D%20await%20getServiceWorkerRegistration()%3B%0D%0A%20%20%20%20%20%20%20%20%20%20if%20(registration)%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20try%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20await%20registration.showNotification(title%2C%20options)%3B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%20catch%20(e2)%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20console.error('Could%20not%20show%20notification'%2C%20e%2C%20e2)%3B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%20else%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20console.error('Could%20not%20show%20notification'%2C%20e)%3B%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20showNotification(args)%20%7B%0D%0A%20%20%20%20%20%20this._showNotification(Scratch.Cast.toString(args.text))%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20async%20_closeNotification()%20%7B%0D%0A%20%20%20%20%20%20if%20(notification)%20%7B%0D%0A%20%20%20%20%20%20%20%20notification.close()%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20%20%20const%20registration%20%3D%20await%20getServiceWorkerRegistration()%3B%0D%0A%20%20%20%20%20%20if%20(registration)%20%7B%0D%0A%20%20%20%20%20%20%20%20const%20notifications%20%3D%20await%20registration.getNotifications()%3B%0D%0A%20%20%20%20%20%20%20%20for%20(const%20notification%20of%20notifications)%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20notification.close()%3B%0D%0A%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20closeNotification()%20%7B%0D%0A%20%20%20%20%20%20this._closeNotification()%3B%0D%0A%20%20%20%20%7D%0D%0A%20%20%7D%0D%0A%0D%0A%20%20Scratch.extensions.register(new%20Notifications())%3B%0D%0A%7D)(Scratch)%3B%0D%0A%20%7D)(Scratch)%3B","data:text/javascript;,(function(Scratch)%20%7B%20(function(Scratch)%20%7B%0D%0A%20%20'use%20strict'%3B%0D%0A%0D%0A%20%20if%20(!Scratch.extensions.unsandboxed)%20%7B%0D%0A%20%20%20%20throw%20new%20Error('files%20extension%20must%20be%20run%20unsandboxed')%3B%0D%0A%20%20%7D%0D%0A%0D%0A%20%20const%20MODE_MODAL%20%3D%20'modal'%3B%0D%0A%20%20const%20MODE_IMMEDIATELY_SHOW_SELECTOR%20%3D%20'selector'%3B%0D%0A%20%20const%20MODE_ONLY_SELECTOR%20%3D%20'only-selector'%3B%0D%0A%20%20const%20ALL_MODES%20%3D%20%5BMODE_MODAL%2C%20MODE_IMMEDIATELY_SHOW_SELECTOR%2C%20MODE_ONLY_SELECTOR%5D%3B%0D%0A%20%20let%20openFileSelectorMode%20%3D%20MODE_MODAL%3B%0D%0A%0D%0A%20%20const%20AS_TEXT%20%3D%20'text'%3B%0D%0A%20%20const%20AS_DATA_URL%20%3D%20'url'%3B%0D%0A%0D%0A%20%20%2F**%0D%0A%20%20%20*%20%40param%20%7Bstring%7D%20accept%20See%20MODE_%20constants%20above%0D%0A%20%20%20*%20%40param%20%7Bstring%7D%20as%20See%20AS_%20constants%20above%0D%0A%20%20%20*%20%40returns%20%7BPromise%3Cstring%3E%7D%20format%20given%20by%20as%20parameter%0D%0A%20%20%20*%2F%0D%0A%20%20const%20showFilePrompt%20%3D%20(accept%2C%20as)%20%3D%3E%20new%20Promise((_resolve)%20%3D%3E%20%7B%0D%0A%20%20%20%20%2F%2F%20We%20can't%20reliably%20show%20an%20%3Cinput%3E%20picker%20without%20%22user%20interaction%22%20in%20all%20environments%2C%0D%0A%20%20%20%20%2F%2F%20so%20we%20have%20to%20show%20our%20own%20UI%20anyways.%20We%20may%20as%20well%20use%20this%20to%20implement%20some%20nice%20features%0D%0A%20%20%20%20%2F%2F%20that%20native%20file%20pickers%20don't%20have%3A%0D%0A%20%20%20%20%2F%2F%20%20-%20Easy%20drag%2Bdrop%0D%0A%20%20%20%20%2F%2F%20%20-%20Reliable%20cancel%20button%20(input%20cancel%20event%20is%20still%20basically%20nonexistent)%0D%0A%20%20%20%20%2F%2F%20%20%20%20This%20is%20important%20so%20we%20can%20make%20this%20just%20a%20reporter%20instead%20of%20a%20command%2Bhat%20block.%0D%0A%20%20%20%20%2F%2F%20%20%20%20Without%20an%20interface%2C%20the%20script%20would%20be%20stalled%20if%20the%20prompt%20was%20just%20cancelled.%0D%0A%0D%0A%20%20%20%20%2F**%20%40param%20%7Bstring%7D%20text%20*%2F%0D%0A%20%20%20%20const%20callback%20%3D%20(text)%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20_resolve(text)%3B%0D%0A%20%20%20%20%20%20outer.remove()%3B%0D%0A%20%20%20%20%20%20document.body.removeEventListener('keydown'%2C%20handleKeyDown)%3B%0D%0A%20%20%20%20%7D%3B%0D%0A%0D%0A%20%20%20%20let%20isReadingFile%20%3D%20false%3B%0D%0A%0D%0A%20%20%20%20%2F**%20%40param%20%7BFile%7D%20file%20*%2F%0D%0A%20%20%20%20const%20readFile%20%3D%20(file)%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20if%20(isReadingFile)%20%7B%0D%0A%20%20%20%20%20%20%20%20return%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20isReadingFile%20%3D%20true%3B%0D%0A%0D%0A%20%20%20%20%20%20const%20reader%20%3D%20new%20FileReader()%3B%0D%0A%20%20%20%20%20%20reader.onload%20%3D%20()%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20%20%20callback(%2F**%20%40type%20%7Bstring%7D%20*%2F%20(reader.result))%3B%0D%0A%20%20%20%20%20%20%7D%3B%0D%0A%20%20%20%20%20%20reader.onerror%20%3D%20()%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20%20%20console.error('Failed%20to%20read%20file%20as%20text'%2C%20reader.error)%3B%0D%0A%20%20%20%20%20%20%20%20callback('')%3B%0D%0A%20%20%20%20%20%20%7D%3B%0D%0A%20%20%20%20%20%20if%20(as%20%3D%3D%3D%20AS_TEXT)%20%7B%0D%0A%20%20%20%20%20%20%20%20reader.readAsText(file)%3B%0D%0A%20%20%20%20%20%20%7D%20else%20%7B%0D%0A%20%20%20%20%20%20%20%20reader.readAsDataURL(file)%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D%3B%0D%0A%0D%0A%20%20%20%20%2F**%20%40param%20%7BKeyboardEvent%7D%20e%20*%2F%0D%0A%20%20%20%20const%20handleKeyDown%20%3D%20(e)%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20if%20(e.key%20%3D%3D%3D%20'Escape')%20%7B%0D%0A%20%20%20%20%20%20%20%20e.stopPropagation()%3B%0D%0A%20%20%20%20%20%20%20%20e.preventDefault()%3B%0D%0A%20%20%20%20%20%20%20%20callback('')%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D%3B%0D%0A%20%20%20%20document.body.addEventListener('keydown'%2C%20handleKeyDown%2C%20%7B%0D%0A%20%20%20%20%20%20capture%3A%20true%0D%0A%20%20%20%20%7D)%3B%0D%0A%0D%0A%20%20%20%20const%20INITIAL_BORDER_COLOR%20%3D%20'%23888'%3B%0D%0A%20%20%20%20const%20DROPPING_BORDER_COLOR%20%3D%20'%2303a9fc'%3B%0D%0A%0D%0A%20%20%20%20const%20outer%20%3D%20document.createElement('div')%3B%0D%0A%20%20%20%20outer.className%20%3D%20'extension-content'%3B%0D%0A%20%20%20%20outer.style.position%20%3D%20'fixed'%3B%0D%0A%20%20%20%20outer.style.top%20%3D%20'0'%3B%0D%0A%20%20%20%20outer.style.left%20%3D%20'0'%3B%0D%0A%20%20%20%20outer.style.width%20%3D%20'100%25'%3B%0D%0A%20%20%20%20outer.style.height%20%3D%20'100%25'%3B%0D%0A%20%20%20%20outer.style.display%20%3D%20'flex'%3B%0D%0A%20%20%20%20outer.style.alignItems%20%3D%20'center'%3B%0D%0A%20%20%20%20outer.style.justifyContent%20%3D%20'center'%3B%0D%0A%20%20%20%20outer.style.background%20%3D%20'rgba(0%2C%200%2C%200%2C%200.5)'%3B%0D%0A%20%20%20%20outer.style.zIndex%20%3D%20'20000'%3B%0D%0A%20%20%20%20outer.style.color%20%3D%20'black'%3B%0D%0A%20%20%20%20outer.style.colorScheme%20%3D%20'light'%3B%0D%0A%20%20%20%20outer.addEventListener('dragover'%2C%20(e)%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20if%20(e.dataTransfer.types.includes('Files'))%20%7B%0D%0A%20%20%20%20%20%20%20%20e.preventDefault()%3B%0D%0A%20%20%20%20%20%20%20%20e.dataTransfer.dropEffect%20%3D%20'copy'%3B%0D%0A%20%20%20%20%20%20%20%20modal.style.borderColor%20%3D%20DROPPING_BORDER_COLOR%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D)%3B%0D%0A%20%20%20%20outer.addEventListener('dragleave'%2C%20()%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20modal.style.borderColor%20%3D%20INITIAL_BORDER_COLOR%3B%0D%0A%20%20%20%20%7D)%3B%0D%0A%20%20%20%20outer.addEventListener('drop'%2C%20(e)%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20const%20file%20%3D%20e.dataTransfer.files%5B0%5D%3B%0D%0A%20%20%20%20%20%20if%20(file)%20%7B%0D%0A%20%20%20%20%20%20%20%20e.preventDefault()%3B%0D%0A%20%20%20%20%20%20%20%20readFile(file)%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D)%3B%0D%0A%20%20%20%20outer.addEventListener('click'%2C%20(e)%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20if%20(e.target%20%3D%3D%3D%20outer)%20%7B%0D%0A%20%20%20%20%20%20%20%20callback('')%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D)%3B%0D%0A%0D%0A%20%20%20%20const%20modal%20%3D%20document.createElement('button')%3B%0D%0A%20%20%20%20modal.style.boxShadow%20%3D%20'0%200%2010px%20-5px%20currentColor'%3B%0D%0A%20%20%20%20modal.style.cursor%20%3D%20'pointer'%3B%0D%0A%20%20%20%20modal.style.font%20%3D%20'inherit'%3B%0D%0A%20%20%20%20modal.style.background%20%3D%20'white'%3B%0D%0A%20%20%20%20modal.style.padding%20%3D%20'16px'%3B%0D%0A%20%20%20%20modal.style.borderRadius%20%3D%20'16px'%3B%0D%0A%20%20%20%20modal.style.border%20%3D%20%608px%20dashed%20%24%7BINITIAL_BORDER_COLOR%7D%60%3B%0D%0A%20%20%20%20modal.style.position%20%3D%20'relative'%3B%0D%0A%20%20%20%20modal.style.textAlign%20%3D%20'center'%3B%0D%0A%20%20%20%20modal.addEventListener('click'%2C%20()%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20input.click()%3B%0D%0A%20%20%20%20%7D)%3B%0D%0A%20%20%20%20modal.focus()%3B%0D%0A%20%20%20%20outer.appendChild(modal)%3B%0D%0A%0D%0A%20%20%20%20const%20input%20%3D%20document.createElement('input')%3B%0D%0A%20%20%20%20input.type%20%3D%20'file'%3B%0D%0A%20%20%20%20input.accept%20%3D%20accept%3B%0D%0A%20%20%20%20input.addEventListener('change'%2C%20(e)%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20%2F%2F%20%40ts-expect-error%0D%0A%20%20%20%20%20%20const%20file%20%3D%20e.target.files%5B0%5D%3B%0D%0A%20%20%20%20%20%20if%20(file)%20%7B%0D%0A%20%20%20%20%20%20%20%20readFile(file)%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D)%3B%0D%0A%0D%0A%20%20%20%20const%20title%20%3D%20document.createElement('div')%3B%0D%0A%20%20%20%20title.textContent%20%3D%20'Select%20or%20drop%20file'%3B%0D%0A%20%20%20%20title.style.fontSize%20%3D%20'1.5em'%3B%0D%0A%20%20%20%20title.style.marginBottom%20%3D%20'8px'%3B%0D%0A%20%20%20%20modal.appendChild(title)%3B%0D%0A%0D%0A%20%20%20%20const%20subtitle%20%3D%20document.createElement('div')%3B%0D%0A%20%20%20%20const%20formattedAccept%20%3D%20accept%20%7C%7C%20'any'%3B%0D%0A%20%20%20%20subtitle.textContent%20%3D%20%60Accepted%20formats%3A%20%24%7BformattedAccept%7D%60%3B%0D%0A%20%20%20%20modal.appendChild(subtitle)%3B%0D%0A%0D%0A%20%20%20%20document.body.appendChild(outer)%3B%0D%0A%0D%0A%20%20%20%20if%20(openFileSelectorMode%20%3D%3D%3D%20MODE_IMMEDIATELY_SHOW_SELECTOR%20%7C%7C%20openFileSelectorMode%20%3D%3D%3D%20MODE_ONLY_SELECTOR)%20%7B%0D%0A%20%20%20%20%20%20input.click()%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20if%20(openFileSelectorMode%20%3D%3D%3D%20MODE_ONLY_SELECTOR)%20%7B%0D%0A%20%20%20%20%20%20%2F%2F%20Note%20that%20browser%20support%20for%20cancel%20is%20currently%20quite%20bad%0D%0A%20%20%20%20%20%20input.addEventListener('cancel'%2C%20()%20%3D%3E%20%7B%0D%0A%20%20%20%20%20%20%20%20callback('')%3B%0D%0A%20%20%20%20%20%20%7D)%3B%0D%0A%20%20%20%20%20%20outer.remove()%3B%0D%0A%20%20%20%20%7D%0D%0A%20%20%7D)%3B%0D%0A%0D%0A%20%20%2F**%0D%0A%20%20%20*%20%40param%20%7Bstring%7D%20text%20Text%20to%20download%0D%0A%20%20%20*%20%40param%20%7Bstring%7D%20file%20Name%20of%20the%20file%0D%0A%20%20%20*%2F%0D%0A%20%20const%20download%20%3D%20(text%2C%20file)%20%3D%3E%20%7B%0D%0A%20%20%20%20const%20blob%20%3D%20new%20Blob(%5Btext%5D)%3B%0D%0A%20%20%20%20const%20url%20%3D%20URL.createObjectURL(blob)%3B%0D%0A%20%20%20%20const%20link%20%3D%20document.createElement('a')%3B%0D%0A%20%20%20%20link.href%20%3D%20url%3B%0D%0A%20%20%20%20link.download%20%3D%20file%3B%0D%0A%20%20%20%20document.body.appendChild(link)%3B%0D%0A%20%20%20%20link.click()%3B%0D%0A%20%20%20%20link.remove()%3B%0D%0A%20%20%20%20URL.revokeObjectURL(url)%3B%0D%0A%20%20%7D%3B%0D%0A%0D%0A%20%20class%20Files%20%7B%0D%0A%20%20%20%20getInfo%20()%20%7B%0D%0A%20%20%20%20%20%20return%20%7B%0D%0A%20%20%20%20%20%20%20%20id%3A%20'files'%2C%0D%0A%20%20%20%20%20%20%20%20name%3A%20'Files'%2C%0D%0A%20%20%20%20%20%20%20%20color1%3A%20'%23fcb103'%2C%0D%0A%20%20%20%20%20%20%20%20color2%3A%20'%23db9a37'%2C%0D%0A%20%20%20%20%20%20%20%20color3%3A%20'%23db8937'%2C%0D%0A%20%20%20%20%20%20%20%20blocks%3A%20%5B%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'showPicker'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.REPORTER%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'open%20a%20file'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20disableMonitor%3A%20true%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20hideFromPalette%3A%20true%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'showPickerExtensions'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.REPORTER%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'open%20a%20%5Bextension%5D%20file'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20extension%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20defaultValue%3A%20'.txt'%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20hideFromPalette%3A%20true%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'showPickerAs'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.REPORTER%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'open%20a%20file%20as%20%5Bas%5D'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20as%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20menu%3A%20'encoding'%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'showPickerExtensionsAs'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.REPORTER%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'open%20a%20%5Bextension%5D%20file%20as%20%5Bas%5D'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20extension%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20defaultValue%3A%20'.txt'%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20as%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20menu%3A%20'encoding'%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%0D%0A%20%20%20%20%20%20%20%20%20%20'---'%2C%0D%0A%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'download'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.COMMAND%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'download%20%5Btext%5D%20as%20%5Bfile%5D'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20defaultValue%3A%20'Hello%2C%20world!'%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20file%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20defaultValue%3A%20'save.txt'%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20opcode%3A%20'setOpenMode'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20blockType%3A%20Scratch.BlockType.COMMAND%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'set%20open%20file%20selector%20mode%20to%20%5Bmode%5D'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20arguments%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20mode%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20type%3A%20Scratch.ArgumentType.STRING%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20defaultValue%3A%20MODE_MODAL%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20menu%3A%20'automaticallyOpen'%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%5D%2C%0D%0A%20%20%20%20%20%20%20%20menus%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20encoding%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20acceptReporters%3A%20true%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20items%3A%20%5B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'text'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20AS_TEXT%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'data%3A%20URL'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20AS_DATA_URL%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20automaticallyOpen%3A%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20acceptReporters%3A%20true%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20items%3A%20%5B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'show%20modal'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20MODE_MODAL%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7B%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20text%3A%20'open%20selector%20immediately'%2C%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20value%3A%20MODE_IMMEDIATELY_SHOW_SELECTOR%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%20%20%20%20%5D%0D%0A%20%20%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%20%20%7D%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20showPicker%20()%20%7B%0D%0A%20%20%20%20%20%20return%20showFilePrompt(''%2C%20AS_TEXT)%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20showPickerExtensions%20(args)%20%7B%0D%0A%20%20%20%20%20%20return%20showFilePrompt(args.extension%2C%20AS_TEXT)%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20showPickerAs%20(args)%20%7B%0D%0A%20%20%20%20%20%20return%20showFilePrompt(''%2C%20args.as)%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20showPickerExtensionsAs%20(args)%20%7B%0D%0A%20%20%20%20%20%20return%20showFilePrompt(args.extension%2C%20args.as)%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20download%20(args)%20%7B%0D%0A%20%20%20%20%20%20download(args.text%2C%20args.file)%3B%0D%0A%20%20%20%20%7D%0D%0A%0D%0A%20%20%20%20setOpenMode%20(args)%20%7B%0D%0A%20%20%20%20%20%20if%20(ALL_MODES.includes(args.mode))%20%7B%0D%0A%20%20%20%20%20%20%20%20openFileSelectorMode%20%3D%20args.mode%3B%0D%0A%20%20%20%20%20%20%7D%20else%20%7B%0D%0A%20%20%20%20%20%20%20%20console.warn(%60unknown%20mode%60%2C%20args.mode)%3B%0D%0A%20%20%20%20%20%20%7D%0D%0A%20%20%20%20%7D%0D%0A%20%20%7D%0D%0A%0D%0A%20%20Scratch.extensions.register(new%20Files())%3B%0D%0A%7D)(Scratch)%3B%0D%0A%20%7D)(Scratch)%3B"]) {
+        vm.extensionManager.loadExtensionURL(extension);
+      }
+
+    } catch (e) {
+      handleError(e);
+    }
+  </script>
+  
+  
+    <script>
+      const getProjectData = (function() {
+        const storage = scaffolding.storage;
+        storage.onprogress = (total, loaded) => {
+          setProgress(interpolate(0.2, 0.98, loaded / total));
+        };
+        
+        storage.addWebStore(
+          [storage.AssetType.ImageVector, storage.AssetType.ImageBitmap, storage.AssetType.Sound],
+          (asset) => new URL('./assets/' + asset.assetId + '.' + asset.dataFormat, location).href
+        );
+        return () => new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          resolve(xhr.response);
+        };
+        xhr.onerror = () => {
+          if (location.protocol === 'file:') {
+            reject(new Error('Zip environment must be used from a website, not from a file URL.'));
+          } else {
+            reject(new Error('Request to load project data failed.'));
+          }
+        };
+        xhr.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setProgress(interpolate(0.1, 0.2, e.loaded / e.total));
+          }
+        };
+        xhr.responseType = 'arraybuffer';
+        xhr.open('GET', "./assets/project.json");
+        xhr.send();
+      });
+      })();
+    </script>
+  <script>
+    const run = async () => {
+      const projectData = await getProjectData();
+      await scaffolding.loadProject(projectData);
+      setProgress(1);
+      loadingScreen.hidden = true;
+      if (true) {
+        scaffolding.start();
+      } else {
+        launchScreen.hidden = false;
+        launchScreen.addEventListener('click', () => {
+          launchScreen.hidden = true;
+          scaffolding.start();
+        });
+        launchScreen.focus();
+      }
+    };
+    run().catch(handleError);
+  </script>
+</body>
+</html>
